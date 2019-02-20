@@ -1,0 +1,71 @@
+# AAICIPY
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import roc_auc_score 
+import scikitplot.metrics as skplt
+
+z=filtered_data['Score'] 
+y=z[0:500] # taking 4900 points of score. if 0 then -ve and if 1 then positive 
+x=preprocessed_reviews[0:500]
+
+x_tr, x_test, y_tr, y_test = train_test_split(x, y, test_size=0.2)
+x_train, x_cv, y_train, y_cv = train_test_split(x_tr, y_tr, test_size=0.2)
+
+bow=CountVectorizer()
+
+x_train=bow.fit_transform(x_train)
+x_cv=bow.transform(x_cv)
+x_test=bow.transform(x_test)
+
+i_value=[]
+auc_value=[]
+auc_train_value=[]
+
+for i in range(0,30,2):
+    i_value.append(i)
+    knn=KNeighborsClassifier(n_neighbors=i)
+    knn.fit(x_train, y_train)
+    y_train_pred=knn.predict_proba(x_train)[:,1]
+    y_cv_pred=knn.predict_proba(x_cv)[:,1]
+    auc_train=roc_auc_score(y_train, y_train_pred)
+    auc=roc_auc_score(y_cv, y_cv_pred)
+    print('for k={x}, AUC is {y}'.format(x=i, y=auc))
+    auc_value.append(auc)
+    auc_train_value.append(auc_train_value)
+
+plt.plot(i_value, auc_value, 'r', label='AUC_CV')
+plt.plot(i_value, auc_train_value, 'b', label='AUC Train')
+#plt.plot(i_value, auc_train_value, 'b', label='Train_data_AUC')
+plt.xlabel('K value')
+plt.ylabel('AUC')
+plt.legend(loc='best')
+plt.title('AUC on CV data')
+plt.show()
+
+a=max(auc_value) #max auc value
+b=auc_value.index(a) #index of max auc
+c=i_value[b] #value of k for which we got max auc
+
+print('-'*50)
+print('we are getting highest AUC={x} on k={y}'.format(x=a, y=c))
+
+knn = KNeighborsClassifier(n_neighbors=20)
+knn.fit(x_train, y_train)
+y_test_pred=knn.predict_proba(x_test)[:,1]
+auc = roc_auc_score(y_test, y_test_pred)
+
+print('AUC on test data for k={x} is {y}'.format(x=c, y=a))
+
+print('-'*50)
+print('roc curve')
+fpr, tpr, threshold = metrics.roc_curve(y_test, y_test_pred) 
+plt.plot(fpr, tpr, marker='_', label='ROC_curve') # plotting ROC curve
+plt.xlabel('False positive rate')
+plt.ylabel('True positive rate')
+plt.title('ROC curve of brute force BOW')
+plt.show()
+print('confusion matrix')
+y_test_predicted = knn.predict(x_test)
+skplt.plot_confusion_matrix(y_test, y_test_predicted)
