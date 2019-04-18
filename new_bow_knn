@@ -1,0 +1,74 @@
+# Please write all the code with proper documentation
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:100000]
+
+x=preprocessed_reviews[:100000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=CountVectorizer()
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_cv=count_vect.transform(x_cv)
+x_test=count_vect.transform(x_test)
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))])
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test)[:,1]
+pred_test_1=neighbor.predict(x_test)
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='ROC curve')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
