@@ -1,0 +1,1074 @@
+#Brute force
+#----------------BOW------------------
+
+# Please write all the code with proper documentation
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sns
+
+y=filtered_data['Score'][:15000]
+
+x=preprocessed_reviews[:15000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=CountVectorizer()
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_cv=count_vect.transform(x_cv)
+x_test=count_vect.transform(x_test)
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, n_jobs=-1)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], n_jobs=-1)
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test)[:,1]
+pred_test_1=neighbor.predict(x_test)
+pred_train=neighbor.predict_proba(x_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+brute_bow_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_bow_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.show()
+
+#confusion matrix using heatmap
+#cm= confusion_matrix(y_test, pred_test_1)
+
+#cm_df=pd.DataFrame(cm, index=[0,1], columns=[0,1])
+#sns.heatmap(cm_df, annot=True);
+#plt.show()
+
+
+
+
+#------------TFIDF-----------------
+
+
+# Please write all the code with proper documentation
+
+# Please write all the code with proper documentation
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:3000]
+
+x=preprocessed_reviews[:3000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=TfidfVectorizer(ngram_range=(1,2), min_df=10)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_cv=count_vect.transform(x_cv)
+x_test=count_vect.transform(x_test)
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, n_jobs=-1)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], n_jobs=-1)
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test)[:,1]
+pred_test_1=neighbor.predict(x_test)
+pred_train_1=neighbor.predict_proba(x_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+brute_tfidf_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_tfidf_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='ROC_Test')
+plt.plot(fpr_train, tpr_train, marker='.', label='ROC_train')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+#------avg w2v------------------
+
+# Please write all the code with proper documentation
+
+# Please write all the code with proper documentation
+
+# Please write all the code with proper documentation
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:5000]
+
+x=preprocessed_reviews[:5000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+#X_train
+
+list_of_sentence_train=[]
+for i in x_train:
+    list_of_sentence_train.append(i.split())
+    
+w2v_model_train = Word2Vec(list_of_sentence_train, min_count=5, size=50, workers=4)
+
+w2v_words_train=list(w2v_model_train.wv.vocab)
+
+x_train_wv=[]
+for sent in tqdm(list_of_sentence_train):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_train:
+            vect_w=w2v_model_train.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_train_wv.append(sent_vec)
+    
+
+# X_CV
+
+list_of_sentence_cv=[]
+for i in x_cv:
+    list_of_sentence_cv.append(i.split())
+    
+w2v_model_cv = Word2Vec(list_of_sentence_cv, min_count=5, size=50, workers=4)
+
+w2v_words_cv=list(w2v_model_cv.wv.vocab)
+
+x_cv_wv=[]
+for sent in tqdm(list_of_sentence_cv):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_cv:
+            vect_w=w2v_model_cv.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_cv_wv.append(sent_vec)
+    
+
+#x_test
+
+list_of_sentence_test=[]
+for i in x_test:
+    list_of_sentence_test.append(i.split())
+    
+w2v_model_test = Word2Vec(list_of_sentence_test, min_count=5, size=50, workers=4)
+
+w2v_words_test=list(w2v_model_test.wv.vocab)
+
+x_test_wv=[]
+for sent in tqdm(list_of_sentence_test):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_test:
+            vect_w=w2v_model_test.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_test_wv.append(sent_vec)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, n_jobs=-1)
+    neigh.fit(x_train_wv, y_train)
+    pred_train=neigh.predict_proba(x_train_wv)[:,1]
+    pred_cv=neigh.predict_proba(x_cv_wv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], n_jobs=-1)
+neighbor.fit(x_train_wv, y_train)
+pred_test=neighbor.predict_proba(x_test_wv)[:,1]
+pred_test_1=neighbor.predict(x_test_wv)
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+brute_w_w2v_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_w_w2v_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+pred_train_1=neighbor.predict_proba(x_train_wv)[:,1]
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+plt.plot(fpr_train, tpr_train, marker='.', label='ROC_Train')
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='ROC_Test')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+
+# ---------- TFIDF weighted w2v -------------------
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:5000]
+
+x=preprocessed_reviews[:5000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+#X_train
+
+model_train = TfidfVectorizer()
+tf_idf_matrix = model_train.fit_transform(x_train)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_train = dict(zip(model_train.get_feature_names(), list(model_train.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_train = model_train.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_train = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_train=[]
+for i in x_train:
+    list_of_sentence_train.append(i.split())
+    
+for sent in tqdm(list_of_sentence_train): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_train and word in tfidf_feat_train:
+            vec = w2v_model_train.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_train[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_train.append(sent_vec)
+
+# X_CV
+
+model_cv = TfidfVectorizer()
+tf_idf_matrix = model_cv.fit_transform(x_cv)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_cv = dict(zip(model_cv.get_feature_names(), list(model_cv.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_cv = model_cv.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_cv = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_cv=[]
+for i in x_cv:
+    list_of_sentence_cv.append(i.split())
+    
+for sent in tqdm(list_of_sentence_cv): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_cv and word in tfidf_feat_cv:
+            vec = w2v_model_cv.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_cv[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_cv.append(sent_vec)
+
+#x_test
+
+model_test = TfidfVectorizer()
+tf_idf_matrix = model_test.fit_transform(x_test)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_test = dict(zip(model_test.get_feature_names(), list(model_test.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_test = model_test.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_test = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_test=[]
+for i in x_test:
+    list_of_sentence_test.append(i.split())
+    
+for sent in tqdm(list_of_sentence_test): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_test and word in tfidf_feat_test:
+            vec = w2v_model_test.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_test[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_test.append(sent_vec)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, n_jobs=-1)
+    neigh.fit(tfidf_sent_vectors_train, y_train)
+    pred_train=neigh.predict_proba(tfidf_sent_vectors_train)[:,1]
+    pred_cv=neigh.predict_proba(tfidf_sent_vectors_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], n_jobs=-1)
+neighbor.fit(tfidf_sent_vectors_train, y_train)
+pred_test=neighbor.predict_proba(tfidf_sent_vectors_test)[:,1]
+pred_test_1=neighbor.predict(tfidf_sent_vectors_test)
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+brute_w_tfidf_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_w_tfidf_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+pred_train_1=neighbor.predict_proba(tfidf_sent_vectors_train)[:,1]
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+plt.plot(fpr_train, tpr_train, marker='.', label='ROC_train')
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='ROC_Test')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+
+# KD_Tree
+#-------------BOW------------------------
+
+# Please write all the code with proper documentation
+
+# Please write all the code with proper documentation
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sns
+
+y=filtered_data['Score'][:3000]
+
+x=preprocessed_reviews[:3000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=CountVectorizer(min_df=10, max_features=500)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_train=x_train.toarray()
+x_cv=count_vect.transform(x_cv)
+x_cv=x_cv.toarray()
+x_test=count_vect.transform(x_test)
+x_test=x_test.toarray()
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, algorithm='kd_tree', n_jobs=-1)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], algorithm='kd_tree', n_jobs=-1)
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test)[:,1]
+pred_test_1=neighbor.predict(x_test)
+pred_train=neighbor.predict_proba(x_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+kd_tree_bow_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+kd_tree_bow_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.show()
+
+#confusion matrix using heatmap
+#cm= confusion_matrix(y_test, pred_test_1)
+
+#cm_df=pd.DataFrame(cm, index=[0,1], columns=[0,1])
+#sns.heatmap(cm_df, annot=True);
+#plt.show()
+
+
+
+#------------TFIDF---------------------
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:3000]
+
+x=preprocessed_reviews[:3000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=TfidfVectorizer(ngram_range=(1,2), min_df=10, max_features=500)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_train=x_train.toarray()
+x_cv=count_vect.transform(x_cv)
+x_cv=x_cv.toarray()
+x_test=count_vect.transform(x_test)
+x_test=x_test.toarray()
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, algorithm='kd_tree', n_jobs=-1)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], algorithm='kd_tree', n_jobs=-1)
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test)[:,1]
+pred_train_1=neighbor.predict_proba(x_train)[:,1]
+pred_test_1=neighbor.predict(x_test)
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got auc of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+kd_tree_tfidf_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+kd_tree_tfidf_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+plt.plot(fpr_train, tpr_train, marker='.', label='Train_ROC')
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test_ROC')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+
+
+
+# -------------------- weighted W2v----------------------
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:5000]
+
+x=preprocessed_reviews[:5000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+#X_train
+
+list_of_sentence_train=[]
+for i in x_train:
+    list_of_sentence_train.append(i.split())
+    
+w2v_model_train = Word2Vec(list_of_sentence_train, min_count=5, size=50, workers=4)
+
+w2v_words_train=list(w2v_model_train.wv.vocab)
+
+x_train_wv=[]
+for sent in tqdm(list_of_sentence_train):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_train:
+            vect_w=w2v_model_train.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_train_wv.append(sent_vec)
+    
+
+# X_CV
+
+list_of_sentence_cv=[]
+for i in x_cv:
+    list_of_sentence_cv.append(i.split())
+    
+w2v_model_cv = Word2Vec(list_of_sentence_cv, min_count=5, size=50, workers=4)
+
+w2v_words_cv=list(w2v_model_cv.wv.vocab)
+
+x_cv_wv=[]
+for sent in tqdm(list_of_sentence_cv):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_cv:
+            vect_w=w2v_model_cv.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_cv_wv.append(sent_vec)
+    
+
+#x_test
+
+list_of_sentence_test=[]
+for i in x_test:
+    list_of_sentence_test.append(i.split())
+    
+w2v_model_test = Word2Vec(list_of_sentence_test, min_count=5, size=50, workers=4)
+
+w2v_words_test=list(w2v_model_test.wv.vocab)
+
+x_test_wv=[]
+for sent in tqdm(list_of_sentence_test):
+    sent_vec=np.zeros(50)
+    cnt_word=0
+    for word in sent:
+        if word in w2v_words_test:
+            vect_w=w2v_model_test.wv[word]
+            sent_vec+=vect_w
+            cnt_word+=1
+    if cnt_word!=0:
+        sent_vec/=cnt_word
+    x_test_wv.append(sent_vec)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, algorithm='kd_tree', n_jobs=-1)
+    neigh.fit(x_train_wv, y_train)
+    pred_train=neigh.predict_proba(x_train_wv)[:,1]
+    pred_cv=neigh.predict_proba(x_cv_wv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('AUC of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('AUC')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], algorithm='kd_tree', n_jobs=-1)
+neighbor.fit(x_train_wv, y_train)
+pred_test=neighbor.predict_proba(x_test_wv)[:,1]
+pred_test_1=neighbor.predict(x_test_wv)
+pred_train_1=neighbor.predict_proba(x_train_wv)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+kd_tree_w_w2v_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+kd_tree_w_w2v_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test_Roc')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train_Roc')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+
+
+
+#---------------- tfidf weighted w2v -------------------------------
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+y=filtered_data['Score'][:5000]
+
+x=preprocessed_reviews[:5000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+#X_train
+
+model_train = TfidfVectorizer()
+tf_idf_matrix = model_train.fit_transform(x_train)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_train = dict(zip(model_train.get_feature_names(), list(model_train.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_train = model_train.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_train = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_train=[]
+for i in x_train:
+    list_of_sentence_train.append(i.split())
+    
+for sent in tqdm(list_of_sentence_train): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_train and word in tfidf_feat_train:
+            vec = w2v_model_train.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_train[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_train.append(sent_vec)
+
+# X_CV
+
+model_cv = TfidfVectorizer()
+tf_idf_matrix = model_cv.fit_transform(x_cv)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_cv = dict(zip(model_cv.get_feature_names(), list(model_cv.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_cv = model_cv.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_cv = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_cv=[]
+for i in x_cv:
+    list_of_sentence_cv.append(i.split())
+    
+for sent in tqdm(list_of_sentence_cv): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_cv and word in tfidf_feat_cv:
+            vec = w2v_model_cv.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_cv[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_cv.append(sent_vec)
+
+#x_test
+
+model_test = TfidfVectorizer()
+tf_idf_matrix = model_test.fit_transform(x_test)
+# we are converting a dictionary with word as a key, and the idf as a value
+dictionary_test = dict(zip(model_test.get_feature_names(), list(model_test.idf_)))
+    
+# TF-IDF weighted Word2Vec
+tfidf_feat_test = model_test.get_feature_names() # tfidf words/col-names
+# final_tf_idf is the sparse matrix with row= sentence, col=word and cell_val = tfidf
+
+tfidf_sent_vectors_test = []; # the tfidf-w2v for each sentence/review is stored in this list
+
+list_of_sentence_test=[]
+for i in x_test:
+    list_of_sentence_test.append(i.split())
+    
+for sent in tqdm(list_of_sentence_test): # for each review/sentence 
+    sent_vec = np.zeros(50) # as word vectors are of zero length
+    weight_sum =0; # num of words with a valid vector in the sentence/review
+    for word in sent: # for each word in a review/sentence
+        if word in w2v_words_test and word in tfidf_feat_test:
+            vec = w2v_model_test.wv[word]
+#             tf_idf = tf_idf_matrix[row, tfidf_feat.index(word)]
+            # to reduce the computation we are 
+            # dictionary[word] = idf value of word in whole courpus
+            # sent.count(word) = tf valeus of word in this review
+            tf_idf = dictionary_test[word]*(sent.count(word)/len(sent))
+            sent_vec += (vec * tf_idf)
+            weight_sum += tf_idf
+    if weight_sum != 0:
+        sent_vec /= weight_sum
+    tfidf_sent_vectors_test.append(sent_vec)
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+for i in range(1,45,2):
+    neigh=KNeighborsClassifier(n_neighbors=i, algorithm='kd_tree', n_jobs=-1)
+    neigh.fit(tfidf_sent_vectors_train, y_train)
+    pred_train=neigh.predict_proba(tfidf_sent_vectors_train)[:,1]
+    pred_cv=neigh.predict_proba(tfidf_sent_vectors_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt K')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on k={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for k={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=KNeighborsClassifier(n_neighbors=i_value[cv_acc_list.index(max(cv_acc_list))], algorithm='kd_tree', n_jobs=-1)
+neighbor.fit(tfidf_sent_vectors_train, y_train)
+pred_test=neighbor.predict_proba(tfidf_sent_vectors_test)[:,1]
+pred_test_1=neighbor.predict(tfidf_sent_vectors_test)
+pred_train_1=neighbor.predict_proba(tfidf_sent_vectors_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by k={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+kd_tree_w_tfidf_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+kd_tree_w_tfidf_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr_train, fpr_train, threshold= roc_curve(y_train, pred_train_1)
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test_Roc')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train_Roc')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+
+
+
+
+
+
+# pretty table
+
+from prettytable import PrettyTable
+x = PrettyTable()
+
+x.field_names = ["Vectorizer", "Model", "Hyper_Parameter", "AUC"]
+x.add_row(["BOW", "Brute", brute_bow_k, brute_bow_auc])
+x.add_row(['Tfidf', 'Brute', brute_tfidf_k, brute_tfidf_auc])
+x.add_row(['Avg w2v', 'Brute', brute_w_w2v_k, brute_w_w2v_auc])
+x.add_row(['TFidf weighted w2v', 'Brute', brute_w_tfidf_k, brute_w_tfidf_auc])
+x.add_row(['BOW', 'Kd_tree', kd_tree_bow_k, kd_tree_bow_auc])
+x.add_row(['Tfidf', 'Kd_tree', kd_tree_tfidf_k, kd_tree_tfidf_auc])
+x.add_row(['Avg w2v', 'Kd_tree', kd_tree_w_w2v_k, kd_tree_w_w2v_auc])
+x.add_row(['TFidf weighted w2v', 'Kd_tree', kd_tree_w_tfidf_k, kd_tree_w_tfidf_auc])
+
+print(x)
+
