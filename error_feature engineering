@@ -1,0 +1,36 @@
+# error
+
+#Feature engineering
+#getting error here
+
+y=filtered_data['Score'][:1000]
+
+x=preprocessed_reviews[:1000]
+
+l=[]
+
+for i in x:
+   l.append(len(i)) 
+
+#print(l)
+k=np.array(l)
+
+df1=pd.DataFrame({'reviews':x, 'length':l})
+
+x_tr, x_test, y_tr, y_test = train_test_split(l, y, test_size=0.2)
+x_train, x_cv, y_train, y_cv = train_test_split(x_tr, y_tr, test_size=0.2)
+
+alpha_range = [10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]
+for i in alpha_range:
+    model=MultinomialNB(alpha=i)
+    model.fit(x_train, y_train)
+    xy=model.predict_proba(x_test)[:,1]
+    auc=roc_auc_score(xy, y_test)
+    print('auc for alpha={x} is {y}'.format(x=i, y=auc))
+
+print(type(y_train))
+
+
+#error:
+
+Reshape your data either using array.reshape(-1, 1) if your data has a single feature or array.reshape(1, -1) if it contains a single sample.
