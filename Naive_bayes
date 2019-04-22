@@ -1,0 +1,261 @@
+#naive bayes _bow
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sns
+from sklearn.naive_bayes import MultinomialNB
+
+y=filtered_data['Score'][:1000]
+
+x=preprocessed_reviews[:1000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=CountVectorizer()
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_cv=count_vect.transform(x_cv)
+x_test_1=count_vect.transform(x_test)
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+
+alpha_range = [10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]
+for i in alpha_range:
+    neigh=MultinomialNB(alpha=i)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt alpha')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on alpha={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for alpha={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=MultinomialNB(alpha=i_value[cv_acc_list.index(max(cv_acc_list))])
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test_1)[:,1]
+pred_test_1=neighbor.predict(x_test_1)
+pred_train=neighbor.predict_proba(x_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by alpha={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+brute_bow_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_bow_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.show()
+
+#confusion matrix using heatmap
+#cm= confusion_matrix(y_test, pred_test_1)
+
+#cm_df=pd.DataFrame(cm, index=[0,1], columns=[0,1])
+#sns.heatmap(cm_df, annot=True);
+#plt.show()
+
+
+
+
+
+-----------------------------------------------------
+
+# top 10 feature of positive class
+
+import operator
+feature_name=count_vect.get_feature_names()
+
+feature_imp=neighbor.coef_[0]
+
+feature_importance=dict(zip(feature_name, feature_imp))
+
+positive_features=sorted(feature_importance.items(), key=operator.itemgetter(1), reverse=True)
+
+print('Top 10 important features of positive class are:')
+
+print('-'*25)
+
+#print(positive_features[:9])
+
+keys=[]
+values=[]
+for i,k in positive_features:
+    keys.append(i)
+    values.append(k)
+    
+    
+df=pd.DataFrame({'features':keys, 'importance':values})
+print(df[:10])
+
+                
+                
+# top features of -ve class
+
+feature_name=count_vect.get_feature_names()
+
+feature_imp=neighbor.coef_[0]
+
+feature_importance=dict(zip(feature_name, feature_imp))
+
+positive_features=sorted(feature_importance.items(), key=operator.itemgetter(1))
+
+print('Top 10 important features of positive class are:')
+
+print('-'*25)
+
+#print(positive_features[:9])
+keys=[]
+values=[]
+for i,k in positive_features:
+    keys.append(i)
+    values.append(k)
+    
+    
+df=pd.DataFrame({'features':keys, 'importance':values})
+print(df[:10])
+
+
+
+
+
+
+
+
+
+
+----------------------------------------
+
+#tfidf code
+
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import roc_auc_score
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sns
+from sklearn.naive_bayes import MultinomialNB
+
+y=filtered_data['Score'][:1000]
+
+x=preprocessed_reviews[:1000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+count_vect=TfidfVectorizer()
+
+#print(len(x_train), len(x_test), len(x_cv))
+
+x_train=count_vect.fit_transform(x_train)
+x_cv=count_vect.transform(x_cv)
+x_test_1=count_vect.transform(x_test)
+cv_acc_list = []
+train_acc_list=[]
+i_value=[]
+
+alpha_range = [10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]
+for i in alpha_range:
+    neigh=MultinomialNB(alpha=i)
+    neigh.fit(x_train, y_train)
+    pred_train=neigh.predict_proba(x_train)[:,1]
+    pred_cv=neigh.predict_proba(x_cv)[:,1]
+    kn=roc_auc_score(y_cv, pred_cv)
+    tn=roc_auc_score(y_train, pred_train)
+    cv_acc_list.append(kn)
+    train_acc_list.append(tn)
+    i_value.append(i)
+    #print('for k={l} accuracy is {j}'.format(l=i, j=kn))
+    
+# ploting graph of accuracy wrt k
+plt.title('Accuracy of train and CV wrt alpha')
+plt.plot(i_value, cv_acc_list, label='cv_data')
+plt.plot(i_value, train_acc_list, label='Train_data')
+plt.legend()
+plt.xlabel('K value')
+plt.ylabel('Accuracy')
+plt.show()
+
+print('we are getting maximum accuracy of {x} on alpha={y} for cv data'.format(x=max(cv_acc_list), y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+print("now let's find accuracy on test data for alpha={x}".format(x=i_value[cv_acc_list.index(max(cv_acc_list))]))
+
+# finding auc of test data.
+neighbor=MultinomialNB(alpha=i_value[cv_acc_list.index(max(cv_acc_list))])
+neighbor.fit(x_train, y_train)
+pred_test=neighbor.predict_proba(x_test_1)[:,1]
+pred_test_1=neighbor.predict(x_test_1)
+pred_train=neighbor.predict_proba(x_train)[:,1]
+auc_test = roc_auc_score(y_test, pred_test)
+print('-'*20, 'finding accuracy', '-'*20)
+print('we got accuracy of {x} by alpha={y} on test data'.format(x=auc_test, y=i_value[cv_acc_list.index(max(cv_acc_list))]))
+brute_bow_k = i_value[cv_acc_list.index(max(cv_acc_list))]
+brute_bow_auc=auc_test
+
+# plotting Roc curve of test data
+#https://machinelearningmastery.com/roc-curves-and-precision-recall-curves-for-classification-in-python/
+
+tpr, fpr, threshold = roc_curve(y_test, pred_test)
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train)
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr, tpr, marker='.', label='Test')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train')
+plt.title('ROC curve')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.legend()
+plt.show()
+
+# confusion matrics
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.show()
+
+#confusion matrix using heatmap
+#cm= confusion_matrix(y_test, pred_test_1)
+
+#cm_df=pd.DataFrame(cm, index=[0,1], columns=[0,1])
+#sns.heatmap(cm_df, annot=True);
+#plt.show()
+   
