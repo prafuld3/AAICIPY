@@ -1,0 +1,32 @@
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import roc_auc_score
+x=preprocessed_reviews[:1000]
+y=filtered_data['Score'][:1000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+bow=CountVectorizer()
+x_train=bow.fit_transform(x_train)
+x_cv=bow.transform(x_cv)
+x_test=bow.transform(x_test)
+
+model = LogisticRegression(penalty='l1')
+grid={'C':[10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]}
+clf=GridSearchCV(estimator=model, param_grid=grid)
+clf.fit(x_train, y_train)
+y_cv_pred=clf.predict_proba(x_cv)[:,1]
+auc=roc_auc_score(y_cv, y_cv_pred)
+print('we are getting maximum auc of {x} on {y}'.format(x=auc, y=clf.best_params_))
+print('-'*15)
+print("Now let's train our model on {x}".format(x=clf.best_params_))
+hyper_para = clf.best_params_
+para=hyper_para.get('C')
+model1= LogisticRegression(penalty='l1', C=para)
+model1.fit(x_train, y_train)
+y_test_pred=model1.predict_proba(x_test)[:,1]
+auc_test = roc_auc_score(y_test, y_test_pred)
+
+print(auc_test)
