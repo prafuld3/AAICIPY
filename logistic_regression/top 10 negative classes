@@ -1,0 +1,11 @@
+z=tfidf.get_feature_names()
+feature_imp=dict(zip(z, model1.coef_[0]))
+
+df_feature_imp=pd.DataFrame(data={'Feature_name':z, 'feature_imp':model1.coef_[0]})
+
+dff=df_feature_imp.sort_values(by=['feature_imp'])[:10]
+
+print('Top 10 important features of positive class are:')
+print('-'*9, 'Features', '-'*9)
+
+dff.reset_index(drop=True)
