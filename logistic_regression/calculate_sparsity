@@ -1,0 +1,4 @@
+array = model1.coef_
+lst = array.tolist()
+non_zero_count=np.count_nonzero(array, axis=1)
+print('sparsity using L1 regularization on BOW is',(array.shape[1]-non_zero_count[0])/array.shape[1]*100)
