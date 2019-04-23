@@ -1,0 +1,27 @@
+import numpy as np
+model2=LogisticRegression(penalty='l2',C=c[auc_list.index(max(auc_list))])
+model2.fit(x_train, y_train)
+
+w=model2.coef_
+mu, sigma = 0, 0.1
+noise=np.random.normal(mu, sigma, [x_train.shape[0], x_train.shape[1]])
+x_train_noised = x_train + noise
+
+model2.fit(x_train_noised, y_train)
+w1=model2.coef_
+
+w_n = w+10**-6
+w1_n = w1+10**-6
+
+weight_changes= ((w_n-w1_n)/w_n)*100
+s=[]
+a=[]
+for i in range(0,101):
+    s.append(i)
+    d=np.percentile(weight_changes, i)
+    a.append(d)
+    
+weight_changes_perc=pd.DataFrame({'Pertile':s, 'Value':a})
+
+#print(weight_changes_perc)
+
