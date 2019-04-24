@@ -1,0 +1,42 @@
+#Plotting Graph
+
+model=SGDRegressor()
+model.fit(X,Y)
+pred_sgd_y=model.predict(X)
+
+
+fig = plt.figure(figsize=(15,7))
+plt.subplot(1,2,1)
+plt.scatter(Y, pred_sgd_y);
+plt.title('Actual vs. Predicted using SGD')
+plt.xlabel('Actual')
+plt.ylabel('Predicted')
+
+
+plt.subplot(1,2,2)
+model2=LinearRegression()
+model2.fit(X, Y)
+pred_Lr_y=model2.predict(X)
+plt.scatter(Y, pred_Lr_y)
+plt.title('Actual vs. Predicted using LR')
+
+plt.show()
+
+
+# Weights
+
+cof_sgd=model.coef_
+cof_lr=model2.coef_
+column=boston.get('feature_names')
+
+print('Weights using SGD and sklearn LR')
+pd.DataFrame({'Feature_names':list(column), 'Weights_SGD':list(cof_sgd), 'Weights_LR':list(cof_lr)[0]})
+
+
+
+#comparing MSE
+
+MSE_SGD=mean_squared_error(pred_sgd_y, Y)
+MSE_Lr=mean_squared_error(pred_Lr_y, Y)
+
+pd.DataFrame({'MSE_SGD':MSE_SGD, 'MSE_LR':MSE_Lr}, index=['>>'])
