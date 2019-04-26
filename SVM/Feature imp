@@ -1,0 +1,16 @@
+model_test.fit(x_train, y_train)
+pd_1 = pd.DataFrame({'Features':bow.get_feature_names(), 'importance':model_test.coef_[0]})
+
+dff=pd_1.sort_values(by=['importance'])[:10]
+
+print('Top 10 Negative Features')
+print('\n')
+print(dff.reset_index(drop=True))
+
+print('-'*20)
+
+print('Top 10 Positive features')
+print('\n')
+dff_1=pd_1.sort_values(by=['importance'], ascending=False)[:10]
+
+print(dff_1.reset_index(drop=True))
