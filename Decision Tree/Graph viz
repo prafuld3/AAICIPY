@@ -1,0 +1,17 @@
+import warnings
+warnings.filterwarnings("ignore")
+from sklearn import tree
+import graphviz
+import os
+import pydot
+from io import StringIO
+#os.environ["PATH"] += os.pathsep + 'C:\Program Files (x86)\Graphviz2.38\bin'
+
+data=tree.export_graphviz(model_1, max_depth=3, out_file=None, feature_names=bow.get_feature_names(),  filled=True, rounded=True)
+
+graph=graphviz.Source(data)
+#graph
+#dotfile = StringIO()
+#pydot.graph_from_dot_data(dotfile.getvalue()).write_png("dtree2.png")
+#graph.render("tree.png",view = True)
+
