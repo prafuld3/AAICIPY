@@ -1,0 +1,90 @@
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+import plotly.offline as offline
+import plotly.graph_objs as go
+offline.init_notebook_mode()
+import scikitplot.metrics as skplt
+
+x=preprocessed_reviews[:2000]
+y=filtered_data['Score'][:2000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x, y, test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2)
+
+bow=CountVectorizer()
+X_train = bow.fit_transform(x_train)
+X_cv = bow.transform(x_cv)
+X_test = bow.transform(x_test)
+
+para_list=[1,5,10,50,100,500,1000]
+estimator_list=[]
+max_depth_list=[]
+
+auc_cv_list=[]
+auc_train_list=[]
+
+for i in para_list:
+    for j in para_list:
+        model_1 = RandomForestClassifier(n_estimators=i, max_depth=j)
+        model_1.fit(X_train, y_train)
+        pred_cv=model_1.predict(X_cv)
+        pred_train=model_1.predict(X_train)
+        auc_cv=roc_auc_score(y_cv, pred_cv)
+        auc_train=roc_auc_score(y_train, pred_train)
+        auc_cv_list.append(auc_cv)
+        auc_train_list.append(auc_train)
+        estimator_list.append(i)
+        max_depth_list.append(j)
+        #print('auc cv is', auc_cv, 'estimator', i, 'max depth', j)
+    #print('-'*15)
+        
+print('we are getting max auc of {x} for n_estimator {x1} and max_depth {x2} on CV data'.format(x=max(auc_cv_list), x1=estimator_list[auc_cv_list.index(max(auc_cv_list))], x2=max_depth_list[auc_cv_list.index(max(auc_cv_list))]))
+
+trace_1 = go.Scatter3d(x=max_depth_list, y=estimator_list, z=auc_cv_list, name='CV')
+trace_2 = go.Scatter3d(x=max_depth_list, y=estimator_list, z=auc_train_list, name='Train')
+
+data=[trace_1,trace_2]
+
+layout=go.Layout(scene=dict(xaxis=dict(title='depth'), yaxis=dict(title='no. of estimators'), zaxis=dict(title='AUC')))
+fig=go.Figure(data=data, layout=layout)
+offline.iplot(fig, filename='AUC plot')
+
+#heat map
+#https://stackoverflow.com/questions/10124751/convert-a-flat-list-to-list-of-lists-in-python
+row = 7
+col = 7
+NewList = [auc_cv_list[col*i : col*(i+1)] for i in range(row)]
+
+df_1 = pd.DataFrame(NewList, index=para_list, columns=para_list)
+sns.heatmap(df_1)
+plt.xlabel('Max depth')
+plt.ylabel('No. of estimators')
+plt.show()
+
+print("Now let's find AUC on test data with n_estimator {x1} and max_depth {x2}".format(x1=estimator_list[auc_cv_list.index(max(auc_cv_list))], x2=max_depth_list[auc_cv_list.index(max(auc_cv_list))]))
+
+model_2 = RandomForestClassifier(n_estimators=estimator_list[auc_cv_list.index(max(auc_cv_list))], max_depth=max_depth_list[auc_cv_list.index(max(auc_cv_list))])
+model_2.fit(X_train, y_train)
+y_pred_train = model_2.predict(X_train)
+y_pred_test = model_2.predict(X_test)
+
+print('we are getting auc of {x} on test data'.format(x=roc_auc_score(y_test, y_pred_test)))
+
+#Roc curve
+
+tpr_train, fpr_train, threshold = roc_curve(y_train, y_pred_train)
+tpr_test, fpr_test, threshold = roc_curve(y_test, y_pred_test)
+
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr_test, tpr_test, marker='.', label='Test_Roc')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train_Roc')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC curve')
+plt.legend()
+plt.show()
+
+skplt.plot_confusion_matrix(y_test, y_pred_test)
