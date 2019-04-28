@@ -1,0 +1,17 @@
+from wordcloud import WordCloud
+importance=model_2.feature_importances_
+features=bow.get_feature_names()
+import operator
+
+lst_imp=importance.tolist()
+dict_wc = dict(zip(features, lst_imp))
+        
+dic_1=sorted(dict_wc.items(), key=operator.itemgetter(1), reverse=True)[:20]
+dict_2 = {}
+for i,j in dic_1:
+    dict_2[i]=j
+wc=WordCloud(background_color='Black', width=1600, height=800).generate_from_frequencies(dict_2)
+fig=plt.figure(figsize=(10,10))
+plt.axis('off')
+plt.tight_layout(pad=0)
+plt.imshow(wc);
