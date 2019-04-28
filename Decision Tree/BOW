@@ -4,6 +4,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import roc_auc_score
 from mpl_toolkits.mplot3d import Axes3D
 import scikitplot.metrics as skplt
+import plotly.offline as offline
+import plotly.graph_objs as go
+offline.init_notebook_mode()
 
 x=preprocessed_reviews[:4500]
 y=filtered_data['Score'][:4500]
@@ -39,9 +42,30 @@ for i in depth_range:
     #print('-'*8)
 print('we are getting maximum AUC of {x} on sample_split {x1} and on max_depth {x2}'.format(x=max(auc_list), x1=split_list[auc_list.index(max(auc_list))], x2=depth_list[auc_list.index(max(auc_list))]))
 print('-'*20)
+
 print("Now let's train our test data on on sample_split {x1} and on max_depth {x2}".format(x1=split_list[auc_list.index(max(auc_list))], x2=depth_list[auc_list.index(max(auc_list))]))
 
 print('•'*17,'Traning', '•'*17)
+
+
+#fig = plt.figure(figsize=(7,7))
+
+#ax = fig.gca(projection='3d')
+#ax.plot(depth_list, split_list, auc_list, label='X_cv')
+#ax.plot(depth_list, split_list, auc_list_train, label='X_train')
+#plt.xlabel('Depth of DT')
+#plt.ylabel('Split of DT')
+#ax.legend()
+#plt.show()
+
+trace1=go.Scatter3d(x=depth_list, y=split_list, z=auc_list, name='CV')
+trace2=go.Scatter3d(x=depth_list, y=split_list, z=auc_list_train, name='Train')
+
+data=[trace1, trace2]
+
+layout=go.Layout(scene=dict(xaxis=dict(title='depth'), yaxis=dict(title='split'), zaxis=dict(title='AUC')))
+fig=go.Figure(data=data, layout=layout)
+offline.iplot(fig, filename='AUC scatter plot')
 
 model_1=DecisionTreeClassifier(max_depth=depth_list[auc_list.index(max(auc_list))], min_samples_split=split_list[auc_list.index(max(auc_list))])
 model_1.fit(X_train, y_train)
@@ -49,17 +73,7 @@ pred_test = model_1.predict_proba(X_test)[:,1]
 pred_test_1 = model_1.predict(X_test)
 pred_train_1 = model_1.predict(X_train)
 auc_test = roc_auc_score(y_test, pred_test)
-
 print('we are getting AUC of {x} on test data'.format(x=auc_test))
-fig = plt.figure(figsize=(7,7))
-
-ax = fig.gca(projection='3d')
-ax.plot(depth_list, split_list, auc_list, label='X_cv')
-ax.plot(depth_list, split_list, auc_list_train, label='X_train')
-plt.xlabel('Depth of DT')
-plt.ylabel('Split of DT')
-ax.legend()
-plt.show()
 
 #ROC
 tpr_test, fpr_test, threshold = roc_curve(y_test, pred_test_1)
