@@ -1,0 +1,76 @@
+#https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
+#https://xgboost.readthedocs.io/en/latest/python/python_api.html
+
+from sklearn.model_selection import train_test_split
+from xgboost import XGBClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+import warnings
+warnings.filterwarnings('ignore')
+from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_curve
+import scikitplot.metrics as skplt
+
+x=preprocessed_reviews[:2000]
+y=filtered_data['Score'][:2000]
+
+x_tr, x_cv, y_tr, y_cv = train_test_split(x,y,test_size=0.2)
+x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
+
+bow=CountVectorizer()
+X_train = bow.fit_transform(x_train)
+X_cv=bow.transform(x_cv)
+X_test=bow.transform(x_test)
+
+para_list=[1,5,10,50,100,500,1000]
+train_auc_lst=[]
+cv_auc_lst=[]
+depth_list=[]
+est_list=[]
+
+for i in para_list:
+    for j in para_list:
+        model=XGBClassifier(max_depth=i, n_estimators=j, n_jobs=-1)
+        model.fit(X_train, y_train)
+        pred_cv=model.predict(X_cv)
+        pred_train=model.predict(X_train)
+        auc_cv=roc_auc_score(y_cv, pred_cv)
+        auc_train=roc_auc_score(y_train, pred_train)
+        cv_auc_lst.append(auc_cv)
+        train_auc_lst.append(auc_train)
+        depth_list.append(i)
+        est_list.append(j)
+        
+        print('auc', auc_cv, 'depth', i, 'est', j)
+        
+    print('-'*6)
+    
+print(cv_auc_lst)
+print(depth_list)
+print(est_list)
+        
+print('we are getting max AUC of {x} on CV data for max_depth {x1} and n_estimators {x2}'
+      .format(x=max(cv_auc_list), x1=depth_list[cv_auc_list.index(max(cv_auc_list))], x2=est_list[cv_auc_list.index(max(cv_auc_list))]))
+
+print("Now let's find AUC on test data")
+
+model_1 = XGBClassifier(max_depth=depth_list[cv_auc_list.index(max(cv_auc_list))], n_estimators=est_list[cv_auc_list.index(max(cv_auc_list))])
+pred_test=model_1.predict_proba(X_test)[:,1]
+pred_test_1=model_1.predict(X_test)
+pred_train_1=model_1.predict(X_train)
+auc_test= roc_auc_score(y_test, pred_test)
+
+print('we are getting AUC of {x} on test data'.format(x=auc_test))
+
+# ROC
+
+tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train_1)
+tpr_test, fpr_test, threshold = roc_curve(y_test, pred_test_1)
+
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr_train, tpr_train, marker='.', label='ROC_Train')
+plt.plot(fpr_test, tpr_test, marker='.', label='ROC_Test')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('ROC Curve')
+plt.legend()
+plt.show()
