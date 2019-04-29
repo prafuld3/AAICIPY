@@ -1,0 +1,28 @@
+#k means on bow
+
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import roc_auc_score
+from sklearn.cluster import KMeans
+
+x=preprocessed_reviews[:1000]
+y=filtered_data['Score'][:1000]
+
+bow=CountVectorizer()
+X=bow.fit_transform(x)
+
+n_cluster=[1,2,3,4,5,6,7,8,9,10]
+inertia=[]
+
+for i in n_cluster:
+    model=KMeans(n_clusters=i)
+    model.fit(X)
+    k=model.inertia_
+    inertia.append(k)
+fig=plt.figure(figsize=(14,7))
+plt.plot(n_cluster, inertia, marker='.')
+plt.xlabel('no of clusters')
+plt.ylabel('Inertia')
+plt.title('Inertia wrt no. of clusters')
+plt.show()
+
