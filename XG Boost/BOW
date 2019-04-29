@@ -23,7 +23,7 @@ X_test=bow.transform(x_test)
 
 para_list=[1,5,10,50,100,500,1000]
 train_auc_lst=[]
-cv_auc_lst=[]
+cv_auc_list=[]
 depth_list=[]
 est_list=[]
 
@@ -35,18 +35,18 @@ for i in para_list:
         pred_train=model.predict(X_train)
         auc_cv=roc_auc_score(y_cv, pred_cv)
         auc_train=roc_auc_score(y_train, pred_train)
-        cv_auc_lst.append(auc_cv)
+        cv_auc_list.append(auc_cv)
         train_auc_lst.append(auc_train)
         depth_list.append(i)
         est_list.append(j)
         
-        print('auc', auc_cv, 'depth', i, 'est', j)
+        #print('auc', auc_cv, 'depth', i, 'est', j)
         
     print('-'*6)
     
-print(cv_auc_lst)
-print(depth_list)
-print(est_list)
+#print(cv_auc_list)
+#print(depth_list)
+#print(est_list)
         
 print('we are getting max AUC of {x} on CV data for max_depth {x1} and n_estimators {x2}'
       .format(x=max(cv_auc_list), x1=depth_list[cv_auc_list.index(max(cv_auc_list))], x2=est_list[cv_auc_list.index(max(cv_auc_list))]))
@@ -54,6 +54,7 @@ print('we are getting max AUC of {x} on CV data for max_depth {x1} and n_estimat
 print("Now let's find AUC on test data")
 
 model_1 = XGBClassifier(max_depth=depth_list[cv_auc_list.index(max(cv_auc_list))], n_estimators=est_list[cv_auc_list.index(max(cv_auc_list))])
+model_1.fit(X_train, y_train)
 pred_test=model_1.predict_proba(X_test)[:,1]
 pred_test_1=model_1.predict(X_test)
 pred_train_1=model_1.predict(X_train)
