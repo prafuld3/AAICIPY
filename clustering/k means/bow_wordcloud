@@ -1,0 +1,52 @@
+from wordcloud import WordCloud, STOPWORDS
+import pandas as pd
+model_1=KMeans(n_clusters=5)
+model_1.fit(X)
+df_1=pd.DataFrame({'Review':x, 'cluster':model_1.labels_},index=[x for x in [x for x in range(1001)][1:1001]])
+bow=CountVectorizer()
+
+
+R_0=[]
+R_1=[]
+R_2=[]
+R_3=[]
+R_4=[]
+
+#r_0=bow.fit_transform(R_0[0])
+
+
+for i in range(5):
+    if i==0:
+        R_0.append(df_1['Review'][df_1['cluster']==i])
+    elif i==1:
+        R_1.append(df_1['Review'][df_1['cluster']==i])
+    elif i==2:
+        R_2.append(df_1['Review'][df_1['cluster']==i])
+    elif i==3:
+        R_3.append(df_1['Review'][df_1['cluster']==i])
+    elif i==4:
+        R_4.append(df_1['Review'][df_1['cluster']==i])
+#print(df_1['Review'][df_1['cluster']==2])
+
+#print(df_1['cluster'].value_counts())
+#print(len(R_4[0]))
+
+r_0 = (' ').join(R_0[0])
+r_1 = (' ').join(R_1[0])
+r_2 = (' ').join(R_2[0])
+r_3 = (' ').join(R_3[0])
+r_4 = (' ').join(R_4[0])
+
+r=[r_0, r_1, r_2, r_3, r_4]
+m=[1,2,3,4,5]
+l=['w0', 'w1', 'w2', 'w3', 'w4']
+
+fig=plt.figure(figsize=(30,30))
+for i,j,k in zip(r,m,l):
+    
+    plt.subplot(5,1,j)
+    k = WordCloud(width=600, height=500).generate(i)
+    plt.axis('off')
+    plt.tight_layout(pad=0)
+    plt.title('Cluster={x}'.format(x=j))
+    plt.imshow(k)
