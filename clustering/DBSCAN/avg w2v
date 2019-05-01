@@ -1,0 +1,36 @@
+from sklearn.cluster import AgglomerativeClustering
+from gensim.models import Word2Vec
+from wordcloud import WordCloud
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import StandardScaler
+
+list_of_sentance=[]
+avg_w2v=[]
+x=preprocessed_reviews[:200]
+
+for i in x:
+    list_of_sentance.append(i.split())
+    
+model = Word2Vec(list_of_sentance, min_count=1, size=50, workers=4)
+w2v_vocab=list(model.wv.vocab)
+
+for j in list_of_sentance:
+    vec=np.zeros(50)
+    cnt=0
+    for k in j:
+        if k in w2v_vocab:
+            w2v = model.wv[k]
+            vec+=w2v
+            cnt+=1
+    if cnt!=0:
+        vec_1=vec/cnt
+    avg_w2v.append(vec_1)
+        
+avg_w2v=StandardScaler().fit_transform(avg_w2v)
+min_pts=50
+
+NN=NearestNeighbors(n_neighbors=min_pts)
+NN.fit(avg_w2v)
+distance, index = NN.kneighbors(avg_w2v)
+
+sorted(distance[:49])
