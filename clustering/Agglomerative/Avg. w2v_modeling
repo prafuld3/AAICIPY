@@ -1,0 +1,28 @@
+from sklearn.cluster import AgglomerativeClustering
+from gensim.models import Word2Vec
+from wordcloud import WordCloud
+list_of_sentance=[]
+avg_w2v=[]
+x=preprocessed_reviews[:200]
+
+for i in x:
+    list_of_sentance.append(i.split())
+    
+model = Word2Vec(list_of_sentance, min_count=1, size=50, workers=4)
+w2v_vocab=list(model.wv.vocab)
+
+for j in list_of_sentance:
+    vec=np.zeros(50)
+    cnt=0
+    for k in j:
+        if k in w2v_vocab:
+            w2v = model.wv[k]
+            vec+=w2v
+            cnt+=1
+    if cnt!=0:
+        vec_1=vec/cnt
+    avg_w2v.append(vec_1)
+        
+model_1=AgglomerativeClustering(n_clusters=3)
+model_1.fit(avg_w2v)
+
