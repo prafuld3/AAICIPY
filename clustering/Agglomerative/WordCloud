@@ -1,0 +1,26 @@
+df_1=pd.DataFrame({'text':x, 'label':model_1.labels_})
+
+cls=[cls1, cls2, cls3]
+
+for i in cls:
+    i=[]
+
+for i,j in zip(range(3),cls):
+    j.append(df_1['text'][df_1['label']==i])
+
+#print(df_1['label'].value_counts())
+#print(len(cls3[0]))
+cls_ = [cls_1, cls_2, cls_3]
+
+for k,l in zip(cls_,cls):
+    k=('').join(l[0])
+    
+fig = plt.figure(figsize=(27,27))
+wc=['wc1', 'wc2', 'wc3']
+for m,n,p in zip(range(1,4),wc,cls_) :
+    plt.subplot(3,1,m)
+    n=WordCloud(width=600, height=600).generate(p)
+    plt.title('Cluster no {x}'.format(x=m))
+    plt.axis('off')
+    plt.tight_layout(pad=0)
+    plt.imshow(n)
