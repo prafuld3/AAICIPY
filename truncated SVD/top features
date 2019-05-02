@@ -1,0 +1,21 @@
+import pandas as pd
+import pickle
+import operator
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+x=pd.read_pickle('preprocess_reviews')[:1000]
+y=filtered_data['Score'][:1000]
+
+vect = TfidfVectorizer()
+X=vect.fit_transform(x)
+
+dic=dict(zip(vect.vocabulary_,vect.idf_))
+
+top_features_val=sorted(dic.items(), key=operator.itemgetter(1), reverse=True)[:3000]
+
+dict1={}
+
+for i,j in top_features_val:
+    dict1[i]=j
+    
+top_features=list(dict1.keys())
