@@ -1,0 +1,20 @@
+#now let's seperate the x and y.
+
+X=boston.get('data')
+Y=boston.get('target')
+
+w=np.random.normal(loc=0, scale=1, size=X.shape[1])
+b=0
+r=0.001
+for e in range(10000):
+    err_lst=[]
+    for i in range(X.shape[0]):
+        yhat=X[i].dot(w)+b
+        error=Y[i]-yhat
+        err_lst.append(error)
+        #print(type(error))
+        #print(i)
+    w=w-(-2/X.shape[0])*r*(np.transpose(X).dot(err_lst))
+    b=b-((-2/X.shape[0])*r*(np.sum(err_lst)))
+print(w)
+print(b)
