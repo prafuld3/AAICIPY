@@ -18,3 +18,11 @@ for e in range(10000):
     b=b-((-2/X.shape[0])*r*(np.sum(err_lst)))
 print(w)
 print(b)
+
+#calculate MSE
+
+pred_y = w.T.dot(X.T) + b
+
+MSE_SGD=np.sum((Y-pred_y)**2)/len(Y)
+
+MSE_SGD
