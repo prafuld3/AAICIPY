@@ -1,0 +1,28 @@
+import matplotlib.pyplot as plt
+from sklearn.decomposition import TruncatedSVD
+tsvd = TruncatedSVD(n_components=2500)
+x_tsvd=tsvd.fit_transform(zero_matrix)
+
+fig=plt.figure(figsize=(15,7))
+plt.plot(np.cumsum(tsvd.explained_variance_ratio_));
+
+plt.xlabel('n_components')
+plt.ylabel('Variance Ratio')
+plt.title('Cumulative explained variance',size=20)
+plt.grid()
+plt.show()
+
+print("now let's zoom in between 0 and 500")
+
+tsvd_500=TruncatedSVD(n_components=500)
+tsvd_500.fit_transform(zero_matrix)
+fig=plt.figure(figsize=(15,7))
+plt.plot(np.cumsum(tsvd_500.explained_variance_ratio_));
+
+plt.xlabel('n_components')
+plt.ylabel('Variance Ratio')
+plt.title('Cumulative explained variance',size=20)
+plt.grid()
+plt.show()
+
+print('we are getting more than 90% of variance for n_components 200')
