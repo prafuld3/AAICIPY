@@ -1,19 +1,21 @@
-lst=['He is not lazy', 'He is intelligent', 'He is smart', 'he is very very very very very smart']
-words=['he', 'is', 'intelligent']
-lst1=[]
+import pandas as pd
+import numpy as np
+window = 3
+zero_matrix = np.zeros((3000,3000))
+for i in x:
+    words_i = i.split()
+    for j in words_i:
+        if j in top_features:
+            for k in range(max(words_i.index(j)-window,0),min(words_i.index(j)+window,len(words_i)-1) + 1):
+                if words_i[k] in top_features:
+                    zero_matrix[top_features.index(j),top_features.index(words_i[k])] += 1
+                else:
+                    pass
+        else:
+            pass
+        
+zero_matrix
+np.fill_diagonal(zero_matrix, 0)
 
-
-for z in lst:
-    y=z.split()
-    lst1.append(y)
-
-for i in range(0,len(words)):
-    for j in range(0,len(words)):
-        for k in range(0,len(lst1)):
-            
-            for l in lst1[k]:
-                for s in l:
-                    if s==words[i] or s==words[j]:
-                        diff=l.index(words[i])-l.index(words[j])
-                        if -2<=diff<=2:
-                            print('yes')
+df=pd.DataFrame(data=zero_matrix, columns=top_features, index=top_features)
+df.shape
