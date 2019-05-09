@@ -1,0 +1,20 @@
+from sklearn.cluster import KMeans
+
+kmean=KMeans(n_clusters=4)
+kmean.fit(svd_1)
+
+a=df.index.tolist()
+b=kmean.labels_
+
+lst1=[]
+lst2=[]
+lst3=[]
+lst4=[]
+
+lst=[lst1, lst2, lst3, lst4]
+
+for c,d in zip(range(4),lst):
+    for e,f in zip(a,b):
+        if f==c:
+            d.append(e)
+
