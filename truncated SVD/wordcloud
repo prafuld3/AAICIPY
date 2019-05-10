@@ -1,6 +1,7 @@
 from sklearn.cluster import KMeans
+from wordcloud import WordCloud
 
-kmean=KMeans(n_clusters=4)
+kmean=KMeans(n_clusters=3)
 kmean.fit(svd_1)
 
 a=df.index.tolist()
@@ -9,12 +10,25 @@ b=kmean.labels_
 lst1=[]
 lst2=[]
 lst3=[]
-lst4=[]
 
-lst=[lst1, lst2, lst3, lst4]
 
-for c,d in zip(range(4),lst):
+lst=[lst1, lst2, lst3]
+
+for c,d in zip(range(3),lst):
     for e,f in zip(a,b):
         if f==c:
             d.append(e)
+            
+h=(' ').join(lst1)
+i=(' ').join(lst2)
+j=(' ').join(lst3)
 
+fig=plt.figure(figsize=(6,6))
+o=WordCloud(width=400, height=400).generate(h)
+plt.axis('off')
+plt.tight_layout(pad=0)
+plt.title('Cluster 1', size=20);
+plt.imshow(o);
+    
+
+    
