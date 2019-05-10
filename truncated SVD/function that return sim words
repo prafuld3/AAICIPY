@@ -1,0 +1,49 @@
+#1
+from sklearn.metrics.pairwise import cosine_similarity
+import datetime
+t1=datetime.datetime.now()
+csm=np.zeros((3000,3000))
+vector=df.index.tolist()
+mat=pd.DataFrame(data=svd_1, index=vector)
+#mat.loc['book'].values
+
+
+for index,word in enumerate(vector):
+    for index_1,word_1 in enumerate(vector):
+        sim=0
+        sim=cosine_similarity(mat.loc[word].values.reshape(1,-1), mat.loc[word_1].values.reshape(1,-1))
+        csm[index, index_1]=sim
+
+t2=datetime.datetime.now()
+
+
+
+#2
+import pickle
+df_csm=pd.DataFrame(data=csm, index=vector, columns=vector)
+
+file=open('df_cosine_sim','wb')
+pickle.dump(df_csm,file)
+file.close()
+
+
+
+#3
+def cos_mat(word):
+    if word in vector:
+        df_2=df_csm.sort_values(by=word, axis=1, ascending=False)
+        col=df_2.columns
+        val=df_2.loc[word].values
+        df_3=pd.DataFrame(data={'Top sim words':col, 'Cos sim':val})[1:6]
+        return df_3
+    else:
+        print('Word {x} is not in our dictionary.'.format(x=word))
+        print('you can try below one of the word:')
+        df=pd.DataFrame(columns=vector[:16])
+        return df
+cos_mat('year')       
+
+
+
+ 
+ 
