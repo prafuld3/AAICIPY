@@ -9,8 +9,8 @@ plt.plot(np.cumsum(tsvd.explained_variance_ratio_));
 plt.xlabel('n_components')
 plt.ylabel('Variance Ratio')
 plt.title('Cumulative explained variance',size=20)
-plt.grid()
-plt.show()
+plt.grid();
+plt.show();
 
 print("now let's zoom in between 0 and 500")
 
@@ -23,6 +23,6 @@ plt.xlabel('n_components')
 plt.ylabel('Variance Ratio')
 plt.title('Cumulative explained variance',size=20)
 plt.grid()
-plt.show()
+plt.show();
 
 print('we are getting more than 90% of variance for n_components 200')
