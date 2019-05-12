@@ -7,15 +7,17 @@ from sklearn.metrics import roc_auc_score
 import math
 import scikitplot.metrics as skplt 
 import pandas as pd
+from sklearn.metrics import auc
 
-y=filtered_data['Score'][:5000]
-x=pd.read_pickle('preprocess_reviews')[:5000]
+y=filtered_data['Score'][:1000]
+x=pd.read_pickle('reviews.pkl')[:1000]
 
 x_tr, x_cv, y_tr, y_cv = train_test_split(x,y,test_size=0.2)
 x_train, x_test, y_train, y_test = train_test_split(x_tr, y_tr, test_size=0.2)
 
 bow=CountVectorizer()
-x_train = bow.fit_transform(x_train)
+bow.fit(x_train)
+x_train = bow.transform(x_train)
 x_test = bow.transform(x_test)
 x_cv = bow.transform(x_cv)
 
@@ -78,14 +80,14 @@ plt.title('AUC of Train & CV wrt Alpha')
 plt.legend()
 plt.show();
 
-print('we are getting max AUC of {x} for alpha = {x1} & {x2} Regularization'.format(x=max_auc, x1=c[index_max_auc], x2=list_penalty[index_max_auc]))
+print('we are getting max AUC of {x} for alpha = {x1} on {x2} Regularization'.format(x=max_auc, x1=c[index_max_auc], x2=list_penalty[index_max_auc]))
 
 print("Now let's find AUC of test data for alpha = {x} on {x1} Regularization".format(x=c[index_max_auc], x1=list_penalty[index_max_auc]))
 print('\n')
 print('•'*18, 'Finding Accuracy', '•'*18)
 
 model_test = SGDClassifier(loss='hinge', alpha=c[index_max_auc], penalty=list_penalty[index_max_auc])
-clf_test = CalibratedClassifierCV(base_estimator=model1, method='isotonic')
+clf_test = CalibratedClassifierCV(base_estimator=model_test, method='isotonic')
 clf_test.fit(x_train, y_train)
 pred_test = clf_test.predict_proba(x_test)[:,1]
 y_pred_test = clf_test.predict(x_test)
@@ -95,12 +97,14 @@ print('we are getting AUC of {x} on test data for alpha = {x2} on {x1} Regulariz
 
 # plotting ROC curve on test data
 y_pred_train_1 = clf_test.predict_proba(x_train)[:,1]
-tpr_train, fpr_train, threshold = roc_curve(y_train, y_pred_train_1)
-tpr_test, fpr_test, threshold = roc_curve(y_test, pred_test)
+y_pred_train = clf_test.predict(x_train)
+
+fpr_train, tpr_train, threshold = roc_curve(y_train, y_pred_train_1)
+fpr_test, tpr_test, threshold = roc_curve(y_test, pred_test)
 
 plt.plot([0,1], [0,1], linestyle='--')
-plt.plot(fpr_train, tpr_train, marker='.', label='Train_Roc')
-plt.plot(fpr_test, tpr_test, marker='.', label='Test_Roc')
+plt.plot(fpr_train, tpr_train, marker='.', label='Train_Roc={x}'.format(x=round(auc(fpr_train,tpr_train))))
+plt.plot(fpr_test, tpr_test, marker='.', label='Test_Roc={x}'.format(x=round(auc(fpr_test,tpr_test))))
 plt.xlabel('False Positive rate')
 plt.ylabel('True Positive Rate')
 plt.title('ROC Curve')
@@ -110,8 +114,12 @@ plt.show()
 print('Confusion matrix')
 
 skplt.plot_confusion_matrix(y_test, y_pred_test);
+plt.title('Confusion matrix Test')
+plt.show();
 
-
+skplt.plot_confusion_matrix(y_train, y_pred_train);
+plt.title('Confusion matrix Train')
+plt.show();
 # Feature Importance
 
 #print(model_test.coef_)
