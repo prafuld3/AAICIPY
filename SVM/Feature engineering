@@ -1,0 +1,63 @@
+#Feature Engineering
+import numpy as np
+
+y=filtered_data['Score'][:1000]
+x=pd.read_pickle('reviews.pkl')[:1000]
+
+x_tr, x_test, y_tr, y_test = train_test_split(x,y,test_size=0.2)
+x_train, x_cv, y_train, y_cv = train_test_split(x_tr, y_tr, test_size=0.2)
+
+def length(input):
+    k=[]
+    for i in input:
+        k.append(len(i))
+    return k
+
+x_train_len=length(x_train)
+x_test_len=length(x_test)
+x_cv_len=length(x_cv)
+
+auc_cv=[]
+auc_train=[]
+c=[10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]
+for i in c:
+    clf_2=SVC(kernel='rbf', C=i, probability=True)
+    clf_2.fit(np.asarray(x_train_len).reshape(-1,1), y_train)
+    pred_cv=clf_2.predict_proba(np.asarray(x_cv_len).reshape(-1,1))[:,1]
+    pred_train=clf_2.predict_proba(np.asarray(x_train_len).reshape(-1,1))[:,1]
+    cv_auc=roc_auc_score(y_cv, pred_cv)
+    train_auc=roc_auc_score(y_train, pred_train)
+    auc_cv.append(cv_auc)
+    auc_train.append(train_auc)
+    
+plt.plot([math.log(i) for i in c], auc_cv, label='cv')
+plt.plot([math.log(i) for i in c], auc_train, label='Train')
+plt.title('AUC Plot')
+plt.legend()
+plt.show()
+
+#
+
+clf_3=SVC(kernel='rbf', C=10**4, probability=True)
+clf_3.fit(np.asarray(x_train_len).reshape(-1,1), y_train)
+pred_test=clf_3.predict_proba(np.asarray(x_test_len).reshape(-1,1))[:,1]
+pred_train=clf_3.predict_proba(np.asarray(x_train_len).reshape(-1,1))[:,1]
+
+pred_test_1=clf_3.predict(np.asarray(x_test_len).reshape(-1,1))
+pred_train_1=clf_3.predict(np.asarray(x_train_len).reshape(-1,1))
+
+fpr_train, tpr_train, threshold=roc_curve(y_train, pred_train)
+fpr_test, tpr_test, threshold=roc_curve(y_test, pred_test)
+
+plt.plot([0,1], [0,1], linestyle='--')
+plt.plot(fpr_train, tpr_train, label='Train Auc={x}'.format(x=round(auc(fpr_train, tpr_train),3)))
+plt.plot(fpr_test, tpr_test, label='Test Auc={x}'.format(x=round(auc(fpr_test, tpr_test),3)))
+plt.title('Roc Curve')
+plt.legend()
+plt.show();
+
+skplt.plot_confusion_matrix(y_train, pred_train_1);
+plt.title('Confusion matrix Train')
+
+skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.title('Confusion matrix Test');
