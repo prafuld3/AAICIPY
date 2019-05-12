@@ -1,74 +1,75 @@
-from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
 from sklearn.svm import SVC
-from sklearn.metrics import roc_curve
-import scikitplot.metrics as skplt
+from sklearn.metrics import roc_auc_score
+import math
 
 
-y=filtered_data['Score'][:2000]
-x=pd.read_pickle('preprocess_reviews')[:2000]
+y=filtered_data['Score'][:1000]
+x=pd.read_pickle('reviews.pkl')[:1000]
 
-x_tr, x_test, y_tr, y_test = train_test_split(x, y, test_size=0.2)
+x_tr, x_test, y_tr, y_test = train_test_split(x,y,test_size=0.2)
 x_train, x_cv, y_train, y_cv = train_test_split(x_tr, y_tr, test_size=0.2)
 
-bow=CountVectorizer(max_features=500, min_df=10)
-x_train = bow.fit_transform(x_train)
+bow=CountVectorizer(min_df=10, max_features=500)
+bow.fit(x_train)
+
+x_train=bow.transform(x_train)
 x_cv=bow.transform(x_cv)
 x_test=bow.transform(x_test)
 
-auc_train=[]
-auc_list=[]
 c=[10**-5, 10**-4, 10**-3, 10**-2, 10**-1, 1, 10**1, 10**2, 10**3, 10**4, 10**5]
-c_1 = [math.log(i) for i in c]
+c_1=[math.log(i) for i in c]
+auc_train=[]
+auc_cv=[]
 
 for i in c:
-    model = SVC(C=i, kernel='rbf', probability=True)
-    model.fit(x_train, y_train)
-    pred_svc = model.predict_proba(x_cv)[:,1]
-    pred_svc_train = model.predict_proba(x_train)[:,1]
-    auc_svc_train = roc_auc_score(y_train, pred_svc_train)
-    auc_svc = roc_auc_score(y_cv, pred_svc)
-    #print('getting auc of {x} for c={x1}'.format(x=auc_svc, x1=i))
-    auc_list.append(auc_svc)
-    auc_train.append(auc_svc_train)
-
-print('we are getting max auc of {x} on c={x1}'.format(x=max(auc_list), x1=c[auc_list.index(max(auc_list))]))
-
-fig = plt.figure(figsize=(9,7))
-plt.plot(c_1, auc_list, label='CV')
-plt.plot(c_1, auc_train, label='Train')
+    clf=SVC(C=i, kernel='rbf', probability=True)
+    clf.fit(x_train, y_train)
+    pred_cv=clf.predict_proba(x_cv)[:,1]
+    pred_train=clf.predict_proba(x_train)[:,1]
+    train_auc=roc_auc_score(y_train, pred_train)
+    cv_auc=roc_auc_score(y_cv, pred_cv)
+    auc_train.append(train_auc)
+    auc_cv.append(cv_auc)
+    print('AUC of {x} on c={x1}'.format(x=round(cv_auc,3), x1=i))
+    
+plt.figure(figsize=(14,7))
+plt.plot(c_1, auc_train, label='Train Auc')
+plt.plot(c_1, auc_cv, label='CV Auc')
+plt.title('AUC plot')
+plt.grid()
 plt.legend()
-plt.title('Train & CV Auc wrt alpha')
-plt.xlabel('Alpha')
-plt.ylabel('AUC')
 plt.show()
 
-print("Now let's train test data with alpha = {x}".format(x=c[auc_list.index(max(auc_list))]))
+####
 
-print('\n')
-print('•'*18, 'Finding Accuracy', '•'*18)
+print("Now let's find AUC on test data")
 
-model_1 = SVC(C=c[auc_list.index(max(auc_list))], kernel='rbf', probability=True)
-model_1.fit(x_train, y_train)
-pred_train = model_1.predict_proba(x_train)[:,1]
-pred_test=model_1.predict_proba(x_test)[:,1]
-pred_test_1=model_1.predict(x_test)
-auc_test=roc_auc_score(y_test, pred_test)
+clf_1=SVC(C=1000, kernel='rbf', probability=True)
+clf_1.fit(x_train, y_train)
+pred_test=clf.predict_proba(x_test)[:,1]
+pred_train=clf.predict_proba(x_train)[:,1]
+pred_test_1=clf.predict(x_test)
+pred_train_1=clf.predict(x_train)
 
-print('we are getting AUC of {x} for alpha={x1}'.format(x=auc_test, x1=c[auc_list.index(max(auc_list))]))
+fpr_test, tpr_test, threshold=roc_curve(y_test, pred_test)
+fpr_train, tpr_train, threshold=roc_curve(y_train, pred_train)
 
-#ROC
-
-tpr, fpr, threshold = roc_curve(y_test, pred_test)
-tpr_train, fpr_train, threshold = roc_curve(y_train, pred_train)
-
+plt.figure(figsize=(14,7))
+plt.plot(fpr_test, tpr_test, marker='.', label='Test auc={x}'.format(x=round(auc(fpr_test,tpr_test),3)))
+plt.plot(fpr_train, tpr_train, marker='.', label='Train auc={x}'.format(x=round(auc(fpr_train, tpr_train),3)))
 plt.plot([0,1], [0,1], linestyle='--')
-plt.plot(fpr, tpr, label='Test ROC')
-plt.plot(fpr_train, tpr_train, label='Train_ROC')
-plt.title('ROC Curve')
-plt.xlabel('False positive rate')
-plt.ylabel('True positive rate')
 plt.legend()
+plt.title('ROC Curve')
+plt.xlabel('False Postive Rate')
+plt.ylabel('True Positive rate')
 plt.show()
 
 skplt.plot_confusion_matrix(y_test, pred_test_1);
+plt.title('Confusion matrix Test')
+plt.show();
+
+skplt.plot_confusion_matrix(y_train, pred_train_1)
+plt.title('Confusion matrix Train')
+plt.show()
