@@ -8,3 +8,18 @@ df['col_name'].replace({'no internet':'no'}) # here all the values of col name w
 if we want to replace multiple values from same column then 
 df['col_name'].replace({'no internet':'no', 'inter':'int'})
 
+def tenure_lab(telcom) :
+    if telcom["tenure"] <= 12 :
+        return "Tenure_0-12"
+    elif (telcom["tenure"] > 12) & (telcom["tenure"] <= 24 ):
+        return "Tenure_12-24"
+    elif (telcom["tenure"] > 24) & (telcom["tenure"] <= 48) :
+        return "Tenure_24-48"
+    elif (telcom["tenure"] > 48) & (telcom["tenure"] <= 60) :
+        return "Tenure_48-60"
+    elif telcom["tenure"] > 60 :
+        return "Tenure_gt_60"
+telcom["tenure_group"] = telcom.apply(lambda telcom:tenure_lab(telcom),
+                                      axis = 1)
+# to make categories out of numbers.
+
