@@ -1,0 +1,10 @@
+df.isnull().sum().values.sum()  # take the count of all null values
+
+df.isna().sum().values.sum() # take the count of all na values.
+
+df.nunique() #  will get column name and count of unique values.
+
+df['col_name'].replace({'no internet':'no'}) # here all the values of col name who contains no internet to no.
+if we want to replace multiple values from same column then 
+df['col_name'].replace({'no internet':'no', 'inter':'int'})
+
