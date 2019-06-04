@@ -1,0 +1,6 @@
+import matplotlib
+
+matplotlib.use('nbagg')
+import matplotlib.pylab as plt
+import seaborn as sns
+from matplotlib import rcParams
