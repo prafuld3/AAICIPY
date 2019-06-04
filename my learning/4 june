@@ -1,0 +1,12 @@
+# to find the NaN values present in each column
+df.isnull().sum()
+
+# to delete the rows which have the Null values
+df.dropna(inplace=True)
+
+# to replace the any column value with another value
+df['column name'].replace(NaN,0) # here we are replacing the NaN with 0's.
+
+# to replace the null values with mean or median
+df.fillna(df.mean(), inplace=True)
+
