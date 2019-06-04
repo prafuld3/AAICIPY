@@ -10,3 +10,33 @@ df['column name'].replace(NaN,0) # here we are replacing the NaN with 0's.
 # to replace the null values with mean or median
 df.fillna(df.mean(), inplace=True)
 
+#simpleimputer
+simple imputer is in sklearn, it can replace the nan value with mean,median or most frequent.
+
+## how to handle categorical features
+
+1. we can convert to the numbers by using the label encoder in sklearn.
+ex. from sklearn.preprocessing import LabelEncoder
+num=LabelEncoder()
+train['sex']=num.fit_transform(train['sex'].astype('str'))
+
+it converts the male into 0 and female into 1. i.e. it gives the numbers to the categorical variable and keeps in the same column.
+
+2. to convert the bins value we can take the median or mean of the range or we can take lower range and upper range as the two separate columns.
+
+3. to convert the zip codes, we can take the city as per business logic.
+or can take the frequency or occurance.
+
+4. dummy coding:
+in the dummy coding, we converts the categorical variables to the separate columns and take 1 if that column variable is present else 0.
+ex. pd.get_dummies(train_data)
+it will take cat variable as separate columns.
+
+5. One hot encoding:
+from sklearn.preprocessing import OneHotEncoder
+enc = OneHotEncoder(handle_unknown='ignore')
+enc.categories_
+
+enc.transform([['Female', 1], ['Male', 4]]).toarray()
+
+same as get_dummies it converts cat variable to the columns. 
