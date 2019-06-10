@@ -1,0 +1,13 @@
+from sklearn.tree import DecisionTreeClassifier
+from graphviz import Source
+from sklearn import tree
+
+import os
+grpahviz_path ='C:\\Users\\MyGlamm\\Downloads\\graphviz-2.38\\release\\bin'
+os.environ["PATH"] = grpahviz_path + ';' +os.environ["PATH"]
+
+model9 = DecisionTreeClassifier(max_depth=10, min_samples_split=500)
+model9.fit(X_train, y_train)
+graph=Source(tree.export_graphviz(model9, out_file=None, rounded=True, proportion=False, feature_names=df4.columns, precision=2, class_names=['not churn', 'churn'],filled=True))
+
+# download link=https://graphviz.gitlab.io/_pages/Download/Download_windows.html
