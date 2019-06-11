@@ -1,0 +1,12 @@
+import plotly.plotly as py
+import cufflinks as cf
+import pandas as pd
+import numpy as np
+
+cf.set_config_file(offline=True, world_readable=True, theme='pearl')
+
+df = pd.DataFrame({'a': df1['circle_size'][df1['is_churned']=='Churned'],
+                   'b': df1['circle_size'][df1['is_churned']=='Not Churned']})
+df.head(2)
+
+df.iplot(kind='histogram', barmode='stack', bins=10, histnorm='probability', filename='cufflinks/multiple-histograms')
