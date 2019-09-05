@@ -1,0 +1,7 @@
+I wanted to replace value of one element in particular column so I used following code to do that.
+
+pd=pd.DataFrame({'one':['a','b','c','d'], 'two':['e','e','f','i']})
+d={'e':'k'}
+pd['two']=pd['two'].replace(d)
+
+here wanted to replace value e by k in column two of dataframe pd.
