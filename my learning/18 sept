@@ -1,0 +1,18 @@
+Time:
+
+import datetime
+strptime: 
+this takes input as string and give output in date format.
+ex. datetime.strptime('2019-09-18T13:17:33', '%Y-%m-%dT%H:%M:%S') # here, we are telling our function my string is in this format.
+
+strftime:
+this takes input in date format and return in string format.
+ex. date.strftime('%Y-%m-%d') # by this we can convert date in way we want.
+
+dateutil:
+dateutil converts string format into date format. without giving time format
+ex. import dateutil
+dateutil.parser.parse('2019-12-30') # it will automatically convert string into datetime.
+
+
+
